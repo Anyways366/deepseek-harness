@@ -3000,6 +3000,9 @@ importers:
       '@deepseek-ai/dsh-session-turn-outline':
         specifier: workspace:*
         version: link:../../session/session-turn-outline
+      '@deepseek-ai/dsh-skill-ecc-pilot':
+        specifier: workspace:*
+        version: link:../../skill/skill-ecc-pilot
       '@deepseek-ai/dsh-skill-filesystem':
         specifier: workspace:*
         version: link:../../skill/skill-filesystem
@@ -13295,6 +13298,19 @@ importers:
       '@deepseek-ai/dsh-scope':
         specifier: workspace:*
         version: link:../../core/scope
+
+  packages/skill/skill-ecc-pilot:
+    dependencies:
+      js-yaml:
+        specifier: ^4.1.0
+        version: 4.3.2
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-skill':
+        specifier: workspace:*
+        version: link:../skill
 
   packages/skill/skill-filesystem:
     dependencies:

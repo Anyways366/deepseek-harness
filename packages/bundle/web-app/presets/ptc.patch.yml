@@ -38,6 +38,17 @@
             name: '@deepseek-ai/dsh-skill-filesystem'
           - id: tool-skill
             name: '@deepseek-ai/dsh-tool-skill'
+
+          # The pinned ECC `coding-standards` import, for THIS preset alone. Like the two
+          # rows above it registers a provider into this preset's layer of the host skill
+          # registry, so agents on other presets never see the imported skill. The provider
+          # verifies the vendored artifact against its recorded pin (raw length + SHA-256,
+          # then the parsed body's length + SHA-256) before any content is returned, keeps
+          # the body under the 16 KiB imported-content bound, and states its invocation
+          # policy in its own trusted code (`modelInvocable: true`, `userInvocable: false`)
+          # instead of trusting imported frontmatter. It publishes no service.
+          - id: skill-ecc-pilot
+            name: '@deepseek-ai/dsh-skill-ecc-pilot'
           - id: command-goal
             name: '@deepseek-ai/dsh-command-goal'
           - id: tool-goal

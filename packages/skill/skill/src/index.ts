@@ -45,6 +45,30 @@ export type SkillResourceBase =
   | { readonly kind: 'url'; readonly url: string }
   | { readonly kind: 'opaque'; readonly description: string }
 
+/** Provenance of a skill whose content was imported from an external pinned source. */
+export interface SkillProvenance {
+  readonly repository: string
+  readonly commit: string
+  readonly path: string
+  readonly rawSha256: string
+  readonly rawBytes: number
+  readonly bodySha256: string
+  readonly bodyBytes: number
+  readonly license: string
+  readonly attribution: string
+}
+
+/** Largest instruction body an imported skill may deliver, in UTF-8 bytes. */
+export const MAX_IMPORTED_SKILL_BODY_BYTES = 16_384
+
+/** Raised when imported skill content violates a bound enforced at render time. */
+export class ImportedSkillBoundError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'ImportedSkillBoundError'
+  }
+}
+
 /** Invocation controls shared by skill discovery consumers. */
 export interface SkillInvocationPolicy {
   /** Whether model-facing catalogs and loaders include this skill. */
@@ -71,6 +95,8 @@ export interface SkillSummary {
   readonly provider: string
   /** Provider-specific base for relative resources. */
   readonly resourceBase?: SkillResourceBase
+  /** Present when the body came from an external pinned source. */
+  readonly provenance?: SkillProvenance
 }
 
 /** Provider catalog entry used by the registry to merge and later load skills. */
@@ -167,7 +193,19 @@ declare module '@deepseek-ai/dsh-llm' {
  * @param skill - name, provider, optional resource base, and body to render.
  * @returns the complete model-facing `<skill_content>` block.
  */
-export function renderSkillContent(skill: Pick<SkillDefinition, 'name' | 'provider' | 'resourceBase' | 'content'>): string {
+export function renderSkillContent(skill: Pick<SkillDefinition, 'name' | 'provider' | 'resourceBase' | 'content' | 'provenance'>): string {
+  // Imported content is bounded here, at the single render boundary the tool result
+  // and the user-invocation injection both funnel through, so no alternate call path
+  // can deliver an oversized imported body. Locally authored skills are unbounded as
+  // before, because they carry no provenance.
+  if (skill.provenance !== undefined) {
+    const bodyBytes = Buffer.byteLength(skill.content, 'utf8')
+    if (bodyBytes > MAX_IMPORTED_SKILL_BODY_BYTES) {
+      throw new ImportedSkillBoundError(
+        `imported skill "${skill.name}" body is ${String(bodyBytes)} bytes, above the ${String(MAX_IMPORTED_SKILL_BODY_BYTES)}-byte imported-content limit`,
+      )
+    }
+  }
   const resourceHint = renderResourceHint(skill)
   return [
     `<skill_content name="${escapeAttr(skill.name)}">`,
@@ -182,7 +220,7 @@ export function renderSkillContent(skill: Pick<SkillDefinition, 'name' | 'provid
   ].join('\n')
 }
 
-function renderResourceHint(skill: Pick<SkillDefinition, 'provider' | 'resourceBase'>): string[] {
+function renderResourceHint(skill: Pick<SkillDefinition, 'provider' | 'resourceBase' | 'provenance'>): string[] {
   const base = skill.resourceBase
   if (base === undefined) {
     return [
@@ -701,6 +739,7 @@ function runtimeCandidate(skill: SkillDefinition): SkillCandidate {
     locator: skill,
     ...skill.path !== undefined ? { path: skill.path } : {},
     ...skill.metadata !== undefined ? { metadata: skill.metadata } : {},
+    ...skill.provenance !== undefined ? { provenance: skill.provenance } : {},
   }
 }
 
@@ -767,7 +806,7 @@ function validateDefinition(skill: SkillDefinition): void {
 }
 
 function toSummary(skill: SkillDefinition | SkillCandidate): SkillSummary {
-  const { name, description, whenToUse, invocation, source, provider, resourceBase } = skill
+  const { name, description, whenToUse, invocation, source, provider, resourceBase, provenance } = skill
   return {
     name,
     ...skill.path === undefined ? {} : { path: skill.path },
@@ -777,6 +816,7 @@ function toSummary(skill: SkillDefinition | SkillCandidate): SkillSummary {
     source,
     provider,
     ...resourceBase !== undefined ? { resourceBase } : {},
+    ...provenance !== undefined ? { provenance } : {},
   }
 }
 

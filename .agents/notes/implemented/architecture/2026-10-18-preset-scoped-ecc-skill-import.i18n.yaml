@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-10-18-preset-scoped-ecc-skill-import.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-10-18-preset-scoped-ecc-skill-import.md
+/agent-note-preset-scoped-ecc-skill-import:
+  en: 5b9a0cd51ec340b0
+  zh: edd6d7b861d07be2
+/agent-note-preset-scoped-ecc-skill-import/problem:
+  en: 9856ee0263f64204
+  zh: 0925e4b03c95d601
+/agent-note-preset-scoped-ecc-skill-import/decision:
+  en: d27ded6b7aa088e3
+  zh: 78856b31fb1bb49b
+/agent-note-preset-scoped-ecc-skill-import/alternatives-considered:
+  en: 4bed87305bee777f
+  zh: 6d12de499ef5be6f
+/agent-note-preset-scoped-ecc-skill-import/consequences:
+  en: 49b0b66c5b42d63a
+  zh: 7f153f69a780137b
